@@ -297,7 +297,7 @@ def get_latest_aliphysics():
     """
     html = urlopen('http://alimonitor.cern.ch/packages/').read()
     [major,minor,patch]=re.split('\.|/',ROOT.gROOT.GetVersion())
-    tag_pattern = r'vAN-\d{8}_ROOT6-\d+' if major > 5 and minor > 10 else r'vAN-\d{8}-\d+'
+    tag_pattern = r'vAN-\d{8}_ROOT6-\d+' if int(major) > 5 and int(minor) > 10 else r'vAN-\d{8}-\d+'
     return sorted(re.findall(tag_pattern, str(html))).pop()
 
 def check_aliphysics_version(version):
