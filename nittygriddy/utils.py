@@ -17,6 +17,7 @@ from pygments import highlight
 from pygments.lexers import JsonLexer
 from pygments.formatters import TerminalFormatter
 
+
 try:
     from urllib2 import urlopen
 except ImportError:
@@ -31,7 +32,11 @@ from nittygriddy import settings
 from nittygriddy.alienTokenError import AlienTokenError
 
 GRID_CONNECTION = None
-
+PYTHONVERSION=sys.version[:3]
+Rpath=os.path.expanduser("~")
+Rpath+="/.local/lib/"
+Rpath+="python"+PYTHONVERSION+"/site-packages/nittygriddy/non-python-files"
+ROOT.gROOT.LoadMacro(Rpath+"/TDataSetManagerAliEn.cxx+g")
 
 def validate_dataset(ds):
     """
