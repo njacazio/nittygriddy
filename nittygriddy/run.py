@@ -113,6 +113,8 @@ def create_subparsers(subparsers):
     parser_run.add_argument('--nworkers', type=str, help="Number of workers for proof lite", default="-1")
     parser_run.add_argument('--par_files', type=str, default="",
                             help="Patch aliphysics on the grid with these space separeated par or libXXX.so files. Build par_files before with `cd $ALICE_WORK_DIR/BUILD/AliPhysics-latest/AliPhysics/; make MODULE.par; make -j$MJ install`")
+    parser_run.add_argument('--an_files', type=str, default="",
+                            help="Set your custom analysis source files as in plugin->SetAnalysisSource(PluginSources)")
     parser_run.add_argument('--run_list', type=str,
                             help="Overwrite default (comma seperated) run list for the given dataset")
     parser_run.add_argument('--ttl', type=str, help="Time this job should live; eg. 1h or 1.5h or 30000s. If no unit is given, default to `s` (deprecated)", default="8h")

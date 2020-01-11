@@ -70,6 +70,7 @@ AliAnalysisGrid* CreateAlienHandler(const std::string gridMode) {
 
   plugin->AddIncludePath("-I. -I$ROOTSYS/include -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
   plugin->SetAdditionalLibs(("libOADB.so libSTEERBase.so " + GetSetting("par_files")).c_str());
+  plugin->SetAnalysisSource((GetSetting("an_files")).c_str());
 
   plugin->SetOverwriteMode();
   plugin->SetExecutableCommand("aliroot -q -b");
