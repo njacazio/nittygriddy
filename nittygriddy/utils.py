@@ -415,10 +415,11 @@ def prepare_par_files(par_files, output_dir):
         if par_file.startswith("lib") and par_file.endswith(".so"):
             continue
         # only copy par files, libs are loaded from grid installation
+        fullpath = os.path.join(par_dir, par_file)
         try:
-            shutil.copy(os.path.join(par_dir, par_file), output_dir)
+            shutil.copy(fullpath, output_dir)
         except IOError:
-            raise ValueError("Par file {} could not be copied!".format(par_file))
+            raise ValueError("Par file {} could not be copied to {}!".format(fullpath, output_dir))
 
 
 def find_user_grid_dir():
