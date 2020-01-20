@@ -21,7 +21,9 @@ def _prepare_output_dir(args):
     Returns
     str : Absolut path to the output directory
     """
-    output_dir = os.path.join(os.path.abspath(os.path.curdir), datetime.now().strftime("%Y%m%d_%H%M"))
+    outtag = args.dataset + "_" + datetime.now().strftime("%Y%m%d_%H%M")
+    output_dir = os.path.join(os.path.abspath(os.path.curdir), outtag)
+    print("Output will be in", output_dir) 
     if args.suffix:
         if "-" in args.suffix:
             raise ValueError('Hyphens ("-") are not allowed in the suffix')
