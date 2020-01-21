@@ -28,11 +28,13 @@ def _prepare_output_dir(args):
             raise ValueError('Hyphens ("-") are not allowed in the suffix')
         output_dir += args.suffix
     try:
-        print("Output will be in", output_dir) 
+        print("Output will be in", output_dir)
         os.mkdir(output_dir)
     except OSError as e:
-        raise ValueError("Cannot create output folder {} (already exist). ".format(output_dir) +
-                         "Maybe wait a few seconds and try again?")
+        raise ValueError(
+            "Cannot create output folder {} (already exist). ".format(output_dir)
+            + "Maybe wait a few seconds and try again?"
+        )
     try:
         os.symlink(output_dir, "latest")
     except OSError as e:
@@ -44,11 +46,18 @@ def _prepare_output_dir(args):
     utils.copy_template_files_to(output_dir)
 
     if utils.project_uses_ConfigureTrain():
-        shutil.copy(os.path.join(os.path.dirname(output_dir), "ConfigureTrain.C"), output_dir)
+        shutil.copy(
+            os.path.join(os.path.dirname(output_dir), "ConfigureTrain.C"), output_dir
+        )
     elif utils.project_uses_train_cfg():
-        shutil.copy(os.path.join(os.path.dirname(output_dir), "MLTrainDefinition.cfg"), output_dir)
+        shutil.copy(
+            os.path.join(os.path.dirname(output_dir), "MLTrainDefinition.cfg"),
+            output_dir,
+        )
     else:
-        raise RuntimeError("Neither ConfigureTrain.C nor MLTrainDefinition.cfg found in current folder!")
+        raise RuntimeError(
+            "Neither ConfigureTrain.C nor MLTrainDefinition.cfg found in current folder!"
+        )
     if args.par_files:
         utils.prepare_par_files(args.par_files, output_dir)
 
@@ -66,11 +75,13 @@ def run(args):
         # generate input file
         ds = utils.get_datasets()[args.dataset]
         # create list of local files
-        with open(os.path.join(output_dir, "input_files.dat"), 'a') as input_files:
-            search_string = os.path.join(settings["local_data_dir"],
-                                         ds["datadir"].lstrip("/"),
-                                         "*",
-                                         ds["data_pattern"])
+        with open(os.path.join(output_dir, "input_files.dat"), "a") as input_files:
+            search_string = os.path.join(
+                settings["local_data_dir"],
+                ds["datadir"].lstrip("/"),
+                "*",
+                ds["data_pattern"],
+            )
             search_string = os.path.expanduser(search_string)
             search_results = glob(search_string)
             # Filter the found files to match the given run list
@@ -83,17 +94,19 @@ def run(args):
                 if any([r for r in run_list if r in path]):
                     filtered_results.append(path)
             if len(filtered_results) == 0:
-                raise ValueError("No local files found at {} matching run list".format(search_string))
-            input_files.write('\n'.join(filtered_results) + '\n')
+                raise ValueError(
+                    "No local files found at {} matching run list".format(search_string)
+                )
+            input_files.write("\n".join(filtered_results) + "\n")
         # command to start the analysis
-        cmd = ['root', '-l', '-q', 'run.C']
+        cmd = ["root", "-l", "-q", "run.C"]
     else:
-        cmd = ['root', '-l', '-q', '-b', '-x', 'run.C(\"full\")']
+        cmd = ["root", "-l", "-q", "-b", "-x", 'run.C("full")']
     procs = []
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         procs.append(p)
-        for line in iter(p.stdout.readline, b''):
+        for line in iter(p.stdout.readline, b""):
             print((line.rstrip()))  # rstrip to remove \n; doesn't like carriage returns
     except KeyboardInterrupt as e:
         for proc in procs:
@@ -108,26 +121,75 @@ def create_subparsers(subparsers):
     """
     description_run = """Start analysis on target platform. Must be executed from a
     nittygriddy project folder (ie. next to the ConfigureTrain.C or a MLTrainDefinition.cfg files)"""
-    parser_run = subparsers.add_parser('run', description=description_run)
-    parser_run.add_argument('runmode', choices=('local', 'lite', 'grid'))
-    parser_run.add_argument('dataset', type=str, help="Use this dataset")
-    parser_run.add_argument('--suffix', type=str, help="Attach to the end of the folder name and files uploaded to the grid")
-    parser_run.add_argument('--nworkers', type=str, help="Number of workers for proof lite", default="-1")
-    parser_run.add_argument('--par_files', type=str, default="",
-                            help="Patch aliphysics on the grid with these space separeated par or libXXX.so files. Build par_files before with `cd $ALICE_WORK_DIR/BUILD/AliPhysics-latest/AliPhysics/; make MODULE.par; make -j$MJ install`")
-    parser_run.add_argument('--an_files', type=str, default="",
-                            help="Set your custom analysis source files as in plugin->SetAnalysisSource(PluginSources)")
-    parser_run.add_argument('--run_list', type=str,
-                            help="Overwrite default (comma seperated) run list for the given dataset")
-    parser_run.add_argument('--ttl', type=str, help="Time this job should live; eg. 1h or 1.5h or 30000s. If no unit is given, default to `s` (deprecated)", default="8h")
-    parser_run.add_argument('--max_files_subjob', type=str, help="Maximum number of files per subjob", default="50")
-    parser_run.add_argument('--wait_for_gdb', action='store_true', default=False,
-                            help="Pause the execution to allow for connecting gdb to the process")
-    parser_run.add_argument('--runs_per_master', type=str, default="1",
-                            help="Number of runs to be processed by each master job. Set it to 0 to process\
-                            the entire runlist with one masterjob.")
-    parser_run.add_argument('--aliphysics_version', type=str, default="",
-                            help="Aliphysics version to use. Available in grid mode only")
-    parser_run.add_argument('--max_n_events', type=str, help="Maximal number of events to be processed locally", default="-1")
-    parser_run.add_argument('--read_trackref', action='store_true', default=False, help="Use TrackRefs, only available from ESDs")
+    parser_run = subparsers.add_parser("run", description=description_run)
+    parser_run.add_argument("runmode", choices=("local", "lite", "grid"))
+    parser_run.add_argument("dataset", type=str, help="Use this dataset")
+    parser_run.add_argument(
+        "--suffix",
+        type=str,
+        help="Attach to the end of the folder name and files uploaded to the grid",
+    )
+    parser_run.add_argument(
+        "--nworkers", type=str, help="Number of workers for proof lite", default="-1"
+    )
+    parser_run.add_argument(
+        "--par_files",
+        type=str,
+        default="",
+        help="Patch aliphysics on the grid with these space separeated par or libXXX.so files. Build par_files before with `cd $ALICE_WORK_DIR/BUILD/AliPhysics-latest/AliPhysics/; make MODULE.par; make -j$MJ install`",
+    )
+    parser_run.add_argument(
+        "--an_files",
+        type=str,
+        default="",
+        help="Set your custom analysis source files as in plugin->SetAnalysisSource(PluginSources)",
+    )
+    parser_run.add_argument(
+        "--run_list",
+        type=str,
+        help="Overwrite default (comma seperated) run list for the given dataset",
+    )
+    parser_run.add_argument(
+        "--ttl",
+        type=str,
+        help="Time this job should live; eg. 1h or 1.5h or 30000s. If no unit is given, default to `s` (deprecated)",
+        default="8h",
+    )
+    parser_run.add_argument(
+        "--max_files_subjob",
+        type=str,
+        help="Maximum number of files per subjob",
+        default="50",
+    )
+    parser_run.add_argument(
+        "--wait_for_gdb",
+        action="store_true",
+        default=False,
+        help="Pause the execution to allow for connecting gdb to the process",
+    )
+    parser_run.add_argument(
+        "--runs_per_master",
+        type=str,
+        default="1",
+        help="Number of runs to be processed by each master job. Set it to 0 to process\
+                            the entire runlist with one masterjob.",
+    )
+    parser_run.add_argument(
+        "--aliphysics_version",
+        type=str,
+        default="",
+        help="Aliphysics version to use. Available in grid mode only",
+    )
+    parser_run.add_argument(
+        "--max_n_events",
+        type=str,
+        help="Maximal number of events to be processed locally",
+        default="-1",
+    )
+    parser_run.add_argument(
+        "--read_trackref",
+        action="store_true",
+        default=False,
+        help="Use TrackRefs, only available from ESDs",
+    )
     parser_run.set_defaults(op=run)
