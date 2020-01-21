@@ -323,7 +323,7 @@ def check_aliphysics_version(version):
     html = urlopen("http://alimonitor.cern.ch/packages/").read()
     try:
         if str(html).find(version) < 0:
-        raise ValueError("AliPhysics version {} is not deployed!".format(version))
+           raise ValueError("AliPhysics version {} is not deployed!".format(version))
     except TypeError:
         raise TypeError("problem in checking the vAN")
     return version
