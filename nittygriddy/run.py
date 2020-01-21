@@ -23,12 +23,12 @@ def _prepare_output_dir(args):
     """
     outtag = args.dataset + "_" + datetime.now().strftime("%Y%m%d_%H%M")
     output_dir = os.path.join(os.path.abspath(os.path.curdir), outtag)
-    print("Output will be in", output_dir) 
     if args.suffix:
         if "-" in args.suffix:
             raise ValueError('Hyphens ("-") are not allowed in the suffix')
         output_dir += args.suffix
     try:
+        print("Output will be in", output_dir) 
         os.mkdir(output_dir)
     except OSError as e:
         raise ValueError("Cannot create output folder {} (already exist). ".format(output_dir) +
