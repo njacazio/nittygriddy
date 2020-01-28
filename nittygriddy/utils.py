@@ -356,6 +356,7 @@ def find_latest_merge_results(alien_workdir):
 
     cmd = ['alien_find', alien_workdir, 'AnalysisResults.root']
     finds = subprocess.check_output(cmd).strip().split()
+    finds = [path.decode("utf-8") for path in finds]
     # alien_find puts some jibberish; stop at first line without path
     finds = [path for path in finds if path.startswith("/")]
 
