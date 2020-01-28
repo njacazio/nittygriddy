@@ -44,7 +44,9 @@ def merge(args):
     if args.mergemode == "download":
         workdir = os.path.dirname(os.path.abspath("./run.C")).split("/")[-1]
         alien_workdir = os.path.join(utils.find_user_grid_dir(), workdir)
-        files = utils.find_latest_merge_results(alien_workdir, args.files)
+        files = ""
+        for i in args.files.split():
+            files += utils.find_latest_merge_results(alien_workdir, i)
         print("The following files will be downloaded:")
         pprint(files)
         for alien_path in files:
