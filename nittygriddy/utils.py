@@ -32,11 +32,12 @@ from nittygriddy import settings
 from nittygriddy.alienTokenError import AlienTokenError
 
 GRID_CONNECTION = None
-PYTHONVERSION=sys.version[:3]
-Rpath=os.path.expanduser("~")
-Rpath+="/.local/lib/"
-Rpath+="python"+PYTHONVERSION+"/site-packages/nittygriddy/non-python-files"
-ROOT.gROOT.LoadMacro(Rpath+"/TDataSetManagerAliEn.cxx+g")
+PYTHONVERSION = sys.version[:3]
+Rpath = os.path.expanduser("~")
+Rpath += "/.local/lib/"
+Rpath += "python" + PYTHONVERSION + "/site-packages/nittygriddy/non-python-files"
+ROOT.gROOT.LoadMacro(Rpath + "/TDataSetManagerAliEn.cxx+g")
+
 
 def validate_dataset(ds):
     """
@@ -50,16 +51,25 @@ def validate_dataset(ds):
     ValueError: If a field is missing
     """
     req_fields = [
-        'data_pattern', 'datadir', 'datatype', 'is_mc', 'notes',
-        'run_list', 'run_number_prefix', 'system']
+        "data_pattern",
+        "datadir",
+        "datatype",
+        "is_mc",
+        "notes",
+        "run_list",
+        "run_number_prefix",
+        "system",
+    ]
     # ds are all datasets; entry is _one_ dataset!
     for name, entry in list(ds.items()):
         for field in req_fields:
             if field not in list(entry.keys()):
-                raise ValueError("Field `{}` missing in `{}` dataset definition".format(field, name))
+                raise ValueError(
+                    "Field `{}` missing in `{}` dataset definition".format(field, name)
+                )
         # Make sure that the run list is a string; if its only one run it might be interpreted as int
-        if isinstance(entry['run_list'], int):
-            entry['run_list'] = str(entry['run_list'])
+        if isinstance(entry["run_list"], int):
+            entry["run_list"] = str(entry["run_list"])
 
 
 def get_datasets():
@@ -90,9 +100,12 @@ def get_datasets():
     # check if there is an intersection between the user defined and the default dataset
     intersect = set(default_ds.keys()).intersection(list(user_ds.keys()))
     if intersect:
-        raise ValueError("The following user datasets are also in the default definitions. "
-                         "Please rename your ones in `~/nitty_datasets.yml`:\n {}"
-                         .format('/n'.join(intersect)))
+        raise ValueError(
+            "The following user datasets are also in the default definitions. "
+            "Please rename your ones in `~/nitty_datasets.yml`:\n {}".format(
+                "/n".join(intersect)
+            )
+        )
     full_ds = dict(default_ds)
     full_ds.update(user_ds)
     return full_ds
@@ -142,7 +155,7 @@ def download_file(alien_src, local_dest):
     # fix the dest to include the file name
     if not os.path.basename(local_dest):
         local_dest = os.path.join(local_dest, os.path.basename(alien_src))
-    if (os.path.isfile(local_dest) ):
+    if os.path.isfile(local_dest):
         raise OSError("Files exist; not redownloading")
     with root_open("alien://" + alien_src) as f:
         if not f.Cp(local_dest):
@@ -150,8 +163,10 @@ def download_file(alien_src, local_dest):
                 os.remove(local_dest)
             except OSError:
                 pass  # file probably didn't exist at all
-            raise OSError("An error occued while downloading {}; "
-                          "The broken file was deleted.".format(local_dest))
+            raise OSError(
+                "An error occued while downloading {}; "
+                "The broken file was deleted.".format(local_dest)
+            )
         return f.GetSize()
 
 
@@ -168,9 +183,11 @@ def find_associated_archive_files(datadir, run_number_prefix, runs, data_pattern
     for archive_name in archive_names:
         for run in runs:
             # Create a search string for this run; make sure its a string not u""
-            search_string = str(os.path.join(datadir,
-                                             run_number_prefix + str(run),
-                                             os.path.dirname(data_pattern)))
+            search_string = str(
+                os.path.join(
+                    datadir, run_number_prefix + str(run), os.path.dirname(data_pattern)
+                )
+            )
             # Most archives are called `root_archive.zip` but some are called aod_archive.root
             # Maybe there are more species out there waiting to be found by a keen explorer!
             finds = ROOT.TAliEnFind(search_string, archive_name)
@@ -183,7 +200,7 @@ def find_associated_archive_files(datadir, run_number_prefix, runs, data_pattern
             # line, we avoid some of this crap by fishing out the urls
             # manually from the TGridResult...
             gr = finds.GetGridResult()
-            urls.extend([str(el.GetValue('turl')).replace("alien://", "") for el in gr])
+            urls.extend([str(el.GetValue("turl")).replace("alien://", "") for el in gr])
         # Did we find any files? If not, lets try it with the next archive name
         if len(urls) != 0:
             break
@@ -254,7 +271,7 @@ def download_dataset(dataset, volume, runs=None):
     ds = get_datasets()[dataset]
     # check if the root datadir exists
     local_data_dir = os.path.expanduser(settings["local_data_dir"])
-    period_dir = os.path.join(local_data_dir, ds["datadir"].lstrip('/'))
+    period_dir = os.path.join(local_data_dir, ds["datadir"].lstrip("/"))
     try:
         os.makedirs(period_dir)
     except OSError:
@@ -268,13 +285,12 @@ def download_dataset(dataset, volume, runs=None):
     except ValueError:
         raise ValueError("Malformated run number. Check run list!")
 
-    urls = find_associated_archive_files(ds["datadir"],
-                                         ds["run_number_prefix"],
-                                         runs,
-                                         ds["data_pattern"])
+    urls = find_associated_archive_files(
+        ds["datadir"], ds["run_number_prefix"], runs, ds["data_pattern"]
+    )
     cum_size = 0
     for url in urls:
-        local_path = os.path.join(local_data_dir, url.lstrip('/'))
+        local_path = os.path.join(local_data_dir, url.lstrip("/"))
         try:
             cum_size += download_from_grid_archive(url, local_path)
         except OSError:
@@ -286,8 +302,11 @@ def download_dataset(dataset, volume, runs=None):
             print(e)
             pass
 
-        sys.stdout.write("\rDownloaded {:2f}% of {}GB so far"
-                         .format(100 * cum_size / 1e9 / volume, volume))
+        sys.stdout.write(
+            "\rDownloaded {:2f}% of {}GB so far".format(
+                100 * cum_size / 1e9 / volume, volume
+            )
+        )
         sys.stdout.flush()
         if (cum_size / 1e9) > volume:
             return
@@ -302,10 +321,15 @@ def get_latest_aliphysics():
     string :
         tag as its usable in run.C; eg., 'vAN-20160606-1'
     """
-    html = urlopen('http://alimonitor.cern.ch/packages/').read()
-    [major,minor,patch]=re.split('\.|/',ROOT.gROOT.GetVersion())
-    tag_pattern = r'vAN-\d{8}_ROOT6-\d+' if int(major) > 5 and int(minor) > 10 else r'vAN-\d{8}-\d+'
+    html = urlopen("http://alimonitor.cern.ch/packages/").read()
+    [major, minor, patch] = re.split("\.|/", ROOT.gROOT.GetVersion())
+    tag_pattern = (
+        r"vAN-\d{8}_ROOT6-\d+"
+        if int(major) > 5 and int(minor) > 10
+        else r"vAN-\d{8}-\d+"
+    )
     return sorted(re.findall(tag_pattern, str(html))).pop()
+
 
 def check_aliphysics_version(version):
     """
@@ -323,10 +347,11 @@ def check_aliphysics_version(version):
     html = urlopen("http://alimonitor.cern.ch/packages/").read()
     try:
         if str(html).find(version) < 0:
-           raise ValueError("AliPhysics version {} is not deployed!".format(version))
+            raise ValueError("AliPhysics version {} is not deployed!".format(version))
     except TypeError:
         raise TypeError("problem in checking the vAN")
     return version
+
 
 def find_latest_merge_results(alien_workdir, file_name="AnalysisResults.root"):
     """
@@ -350,11 +375,11 @@ def find_latest_merge_results(alien_workdir, file_name="AnalysisResults.root"):
 
     """
     try:
-        subprocess.check_output(['alien_ls', alien_workdir])
+        subprocess.check_output(["alien_ls", alien_workdir])
     except subprocess.CalledProcessError:
         raise ValueError("{} does not exist".format(alien_workdir))
 
-    cmd = ['alien_find', alien_workdir, file_name]
+    cmd = ["alien_find", alien_workdir, file_name]
     finds = subprocess.check_output(cmd).strip().split()
     finds = [path.decode("utf-8") for path in finds]
     # alien_find puts some jibberish; stop at first line without path
@@ -387,7 +412,7 @@ def check_alien_token():
     AlienTokenError :
         If there was an error checking the token or if the existing token is invalid
     """
-    cmd = ['alien-token-info']
+    cmd = ["alien-token-info"]
     try:
         output = subprocess.check_output(cmd)
     except subprocess.CalledProcessError:
@@ -395,7 +420,9 @@ def check_alien_token():
     for l in output.splitlines():
         if "Token is still valid!" in str(l):
             return True
-    raise AlienTokenError("Alien token is invalid. Call `alien-token-init` before running nittygriddy.")
+    raise AlienTokenError(
+        "Alien token is invalid. Call `alien-token-init` before running nittygriddy."
+    )
 
 
 def prepare_par_files(par_files, output_dir):
@@ -423,7 +450,9 @@ def prepare_par_files(par_files, output_dir):
         try:
             shutil.copy(fullpath, output_dir)
         except IOError:
-            raise ValueError("Par file {} could not be copied to {}!".format(fullpath, output_dir))
+            raise ValueError(
+                "Par file {} could not be copied to {}!".format(fullpath, output_dir)
+            )
 
 
 def find_user_grid_dir():
@@ -464,7 +493,7 @@ def find_sources_of_merged_files(merge_results):
         # the given AnalysisResults.root file
         # Thus: /alienpath/AnalysisResults.root -> /alienpath/*/
         search_str_sources = merge_result.replace("AnalysisResults.root", "*/")
-        cmd = ['alien_find', search_str_sources, 'AnalysisResults.root']
+        cmd = ["alien_find", search_str_sources, "AnalysisResults.root"]
         finds = subprocess.check_output(cmd).strip().split()
         # alien_find puts some jibberish; stop at first line without path
         finds = [path for path in finds if path.startswith("/")]
@@ -473,12 +502,14 @@ def find_sources_of_merged_files(merge_results):
         # than their merge result
         for find in finds:
             if len(merge_result) >= len(find):
-                raise ValueError("Algorithm for finding merge source files produced unexpected results")
+                raise ValueError(
+                    "Algorithm for finding merge source files produced unexpected results"
+                )
         sources += finds
     return sources
 
 
-def yn_choice(message, default='y'):
+def yn_choice(message, default="y"):
     """
     Querry the user if he or she wants to proceed.
 
@@ -494,9 +525,9 @@ def yn_choice(message, default='y'):
     bool :
         `True` for yes, else `False`
     """
-    choices = 'Y/n' if default.lower() in ('y', 'yes') else 'y/N'
+    choices = "Y/n" if default.lower() in ("y", "yes") else "y/N"
     choice = input("%s (%s) " % (message, choices))
-    values = ('y', 'yes', '') if default == 'y' else ('y', 'yes')
+    values = ("y", "yes", "") if default == "y" else ("y", "yes")
     return choice.strip().lower() in values
 
 
@@ -518,9 +549,11 @@ def _parse_time_to_live_arg(ttl):
             raise ValueError("Invalid TTL specified: {}".format(ttl))
     # no unit given
     else:
-        print("Warning: TTL should be specified with units, e.g. 1h, or 1.5h, or 30000s. "
-              "The given TTL is interpreted as {}s. "
-              "Future version of nittygriddy will require a time unit for TTL".format(ttl))
+        print(
+            "Warning: TTL should be specified with units, e.g. 1h, or 1.5h, or 30000s. "
+            "The given TTL is interpreted as {}s. "
+            "Future version of nittygriddy will require a time unit for TTL".format(ttl)
+        )
     return ttl
 
 
@@ -532,29 +565,32 @@ def prepare_get_setting_c_file(output_dir, args):
             runs = [run.strip() for run in args.run_list.split(",")]
             runs_str = ", ".join(runs)
         else:
-            runs_str = ds['run_list']
-        as_string = get_template_GetSetting().\
-            format(workdir=os.path.split(output_dir)[1],
-                   datadir=ds['datadir'],
-                   data_pattern=ds['data_pattern'],
-                   run_number_prefix=ds['run_number_prefix'],
-                   run_list=runs_str,
-                   is_mc=ds["is_mc"],
-                   datatype=ds["datatype"],
-                   runmode=args.runmode,
-                   nworkers=args.nworkers,
-                   wait_for_gdb="true" if args.wait_for_gdb else "false",
-                   aliphysics_version= check_aliphysics_version(get_latest_aliphysics()) if args.runmode == "grid" and args.aliphysics_version==""
-                     else check_aliphysics_version(args.aliphysics_version) if args.runmode == "grid" and args.aliphysics_version!=""
-                     else "",
-                   par_files=args.par_files if args.par_files else "",
-                   an_files=args.an_files if args.an_files else "",
-                   ttl=_parse_time_to_live_arg(args.ttl),
-                   max_files_subjob=args.max_files_subjob,
-                   use_train_conf="true" if project_uses_train_cfg() else "false",
-                   runs_per_master=args.runs_per_master,
-                   max_n_events=args.max_n_events,
-                   read_trackref="true" if args.read_trackref else "false")
+            runs_str = ds["run_list"]
+        as_string = get_template_GetSetting().format(
+            workdir=os.path.split(output_dir)[1],
+            datadir=ds["datadir"],
+            data_pattern=ds["data_pattern"],
+            run_number_prefix=ds["run_number_prefix"],
+            run_list=runs_str,
+            is_mc=ds["is_mc"],
+            datatype=ds["datatype"],
+            runmode=args.runmode,
+            nworkers=args.nworkers,
+            wait_for_gdb="true" if args.wait_for_gdb else "false",
+            aliphysics_version=check_aliphysics_version(get_latest_aliphysics())
+            if args.runmode == "grid" and args.aliphysics_version == ""
+            else check_aliphysics_version(args.aliphysics_version)
+            if args.runmode == "grid" and args.aliphysics_version != ""
+            else "",
+            par_files=args.par_files if args.par_files else "",
+            an_files=args.an_files if args.an_files else "",
+            ttl=_parse_time_to_live_arg(args.ttl),
+            max_files_subjob=args.max_files_subjob,
+            use_train_conf="true" if project_uses_train_cfg() else "false",
+            runs_per_master=args.runs_per_master,
+            max_n_events=args.max_n_events,
+            read_trackref="true" if args.read_trackref else "false",
+        )
         get_setting_c.write(as_string)
 
 
@@ -574,9 +610,11 @@ def is_valid_project_dir():
     # Project dir has either an ConfigureTrain.C or a
     # MLTrainDefinition.cfg file, but not both
     if not (train_conf_file or train_conf) and (train_conf_file ^ train_conf):
-        raise ValueError("Can only run from a nittygriddy project folder! "
-                         "A project folder has either an `ConfigureTrain.C` or a "
-                         "`MLTrainDefinition.cfg` file, but not both.")
+        raise ValueError(
+            "Can only run from a nittygriddy project folder! "
+            "A project folder has either an `ConfigureTrain.C` or a "
+            "`MLTrainDefinition.cfg` file, but not both."
+        )
 
 
 def project_uses_ConfigureTrain():
@@ -614,23 +652,26 @@ def _internal_files_dir():
     """
     # The dir with the python files
     src_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(src_dir, 'non-python-files')
+    return os.path.join(src_dir, "non-python-files")
+
 
 def is_string(s):
-  if sys.version_info[0] >= 3:
-    return isinstance(s, str)
-  return isinstance(s, basestring)
+    if sys.version_info[0] >= 3:
+        return isinstance(s, str)
+    return isinstance(s, basestring)
+
 
 def to_unicode(s):
-  if sys.version_info[0] >= 3:
-    if isinstance(s, bytes):
-      return s.decode("utf-8")  # to get newlines as such and not as escaped \n
-    return str(s)
-  elif isinstance(s, str):
-    return unicode(s, "utf-8")  # utf-8 is a safe assumption
-  elif not isinstance(s, unicode):
-    return unicode(str(s))
-  return s
+    if sys.version_info[0] >= 3:
+        if isinstance(s, bytes):
+            return s.decode("utf-8")  # to get newlines as such and not as escaped \n
+        return str(s)
+    elif isinstance(s, str):
+        return unicode(s, "utf-8")  # utf-8 is a safe assumption
+    elif not isinstance(s, unicode):
+        return unicode(str(s))
+    return s
+
 
 def pprint_json(dics):
     json_str = json.dumps(dics, sort_keys=True, indent=2)

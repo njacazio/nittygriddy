@@ -14,30 +14,34 @@ from nittygriddy import utils
 
 def merge(args):
     # check if we are in a output dirname
-    if not ((os.path.isfile("./ConfigureTrain.C") or
-             os.path.isfile("./MLTrainDefinition.cfg")) and
-            os.path.isfile("./GetSetting.C") and
-            os.path.isfile("./run.C")):
+    if not (
+        (
+            os.path.isfile("./ConfigureTrain.C")
+            or os.path.isfile("./MLTrainDefinition.cfg")
+        )
+        and os.path.isfile("./GetSetting.C")
+        and os.path.isfile("./run.C")
+    ):
         raise ValueError("This command needs to be run from an output directory")
 
     if not utils.check_alien_token():
         print("No valid alien token present. Run `alien-token-init` before nittygriddy")
         quit()
 
-    ROOT.gROOT.LoadMacro(r'GetSetting.C')
+    ROOT.gROOT.LoadMacro(r"GetSetting.C")
     if ROOT.GetSetting("runmode") != "grid":
         raise ValueError("The data in this folder was not run on the grid!")
 
     # root does not like it if the stdout is piped and it uses some shell functionality
     # thus, using call on the whole string and shell True
-    if args.mergemode == 'online':
+    if args.mergemode == "online":
         cmd = r'root -b -l -q -x "run.C(\"merge_online\")"'
         subprocess.check_call(cmd, shell=True)
-    elif args.mergemode == 'offline':
+    elif args.mergemode == "offline":
         cmd = r'root -b -l -q -x "run.C(\"merge_offline\")"'
         subprocess.check_call(cmd, shell=True)
 
-    if args.mergemode == 'download':
+    if args.mergemode == "download":
         workdir = os.path.dirname(os.path.abspath("./run.C")).split("/")[-1]
         alien_workdir = os.path.join(utils.find_user_grid_dir(), workdir)
         files = utils.find_latest_merge_results(alien_workdir, args.files)
@@ -53,52 +57,75 @@ def merge(args):
                 # If there was an error in the download, just print, but keep going
                 print(e)
 
-    if args.mergemode == 'clean':
+    if args.mergemode == "clean":
         workdir = os.path.dirname(os.path.abspath("./run.C")).split("/")[-1]
         alien_workdir = os.path.join(utils.find_user_grid_dir(), workdir)
-        files = utils.find_sources_of_merged_files(utils.find_latest_merge_results(alien_workdir))
+        files = utils.find_sources_of_merged_files(
+            utils.find_latest_merge_results(alien_workdir)
+        )
         folders = [os.path.split(f)[0] for f in files]
         if not folders:
             print("No files to be cleaned up")
             return
         print("The following folders will be __DELETED__:")
         pprint(folders)
-        shall_delete = utils.yn_choice("Do you really want to delete these Folders? This may take a while")
+        shall_delete = utils.yn_choice(
+            "Do you really want to delete these Folders? This may take a while"
+        )
         if shall_delete:
             # its not possible to pass all arguments at once (too many)
             # Hence, pass 10 at a time
             for slice_start in range(len(folders))[::10]:
-                cmd = ['alien_rmdir'] + folders[slice_start:(slice_start + 10)]
+                cmd = ["alien_rmdir"] + folders[slice_start : (slice_start + 10)]
                 # alien_rmdir always seems to return a non-zero exit code... Yeah!
                 subprocess.call(cmd)
         # see if the deletion was successful:
-        left_files = utils.find_sources_of_merged_files(utils.find_latest_merge_results(alien_workdir))
+        left_files = utils.find_sources_of_merged_files(
+            utils.find_latest_merge_results(alien_workdir)
+        )
         if left_files:
             print("The following files could not be deleted:")
             pprint(left_files)
 
-    if args.mergemode == 'unmerge':
+    if args.mergemode == "unmerge":
         workdir = os.path.dirname(os.path.abspath("./run.C")).split("/")[-1]
         alien_workdir = os.path.join(utils.find_user_grid_dir(), workdir)
-        subprocess.call(['alien_rm', os.path.join(alien_workdir, 'output/*/Stage_*.xml')])
-        subprocess.call(['alien_rm', os.path.join(alien_workdir, 'output/*/AnalysisResults.root')])
-        subprocess.call(['alien_rm', os.path.join(alien_workdir, 'output/*/root_archive.zip')])
-        subprocess.call(['alien_rmdir', os.path.join(alien_workdir, 'output/*/Stage_*')])
+        subprocess.call(
+            ["alien_rm", os.path.join(alien_workdir, "output/*/Stage_*.xml")]
+        )
+        subprocess.call(
+            ["alien_rm", os.path.join(alien_workdir, "output/*/AnalysisResults.root")]
+        )
+        subprocess.call(
+            ["alien_rm", os.path.join(alien_workdir, "output/*/root_archive.zip")]
+        )
+        subprocess.call(
+            ["alien_rmdir", os.path.join(alien_workdir, "output/*/Stage_*")]
+        )
 
 
 def create_subparsers(subparsers):
     # Create merge sub-parser
     description_merge = """Merge related tasks connected to a previously run grid analysis. Must be
     executed from output folder of that analysis."""
-    parser_merge = subparsers.add_parser('merge', description=description_merge)
-    parser_merge.add_argument('mergemode',
-                              choices=('online', 'offline', 'download', 'clean', 'unmerge'),
-                              help=("Merge files online, offline or download the latest merge results. "
-                                    "Use `clean` to delete everything except the last merge stage. "
-                                    "Use this if you only wnat to keep the final result to safe space. "
-                                    "`unmerge` deletes all merge stages but kepes "
-                                    "the raw data. Use this if you want to re-merge your "
-                                    "data after more jobs finished. Don't use this in combination "
-                                    "with `clean` or you will be sorry."))
+    parser_merge = subparsers.add_parser("merge", description=description_merge)
+    parser_merge.add_argument(
+        "mergemode",
+        choices=("online", "offline", "download", "clean", "unmerge"),
+        help=(
+            "Merge files online, offline or download the latest merge results. "
+            "Use `clean` to delete everything except the last merge stage. "
+            "Use this if you only wnat to keep the final result to safe space. "
+            "`unmerge` deletes all merge stages but kepes "
+            "the raw data. Use this if you want to re-merge your "
+            "data after more jobs finished. Don't use this in combination "
+            "with `clean` or you will be sorry."
+        ),
+    )
     parser_merge.set_defaults(op=merge)
-    parser_merge.add_argument('--files', help=("File name to download"), type=str, default="AnalysisResults.root")
+    parser_merge.add_argument(
+        "--files",
+        help=("File name to download"),
+        type=str,
+        default="AnalysisResults.root",
+    )
