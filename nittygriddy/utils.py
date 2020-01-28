@@ -328,7 +328,7 @@ def check_aliphysics_version(version):
         raise TypeError("problem in checking the vAN")
     return version
 
-def find_latest_merge_results(alien_workdir):
+def find_latest_merge_results(alien_workdir, file_name="AnalysisResults.root"):
     """
     Find the files resulting from the latest online merge. It relies on
     the resulting files being called `AnalysisResults.root`
@@ -354,23 +354,23 @@ def find_latest_merge_results(alien_workdir):
     except subprocess.CalledProcessError:
         raise ValueError("{} does not exist".format(alien_workdir))
 
-    cmd = ['alien_find', alien_workdir, 'AnalysisResults.root']
+    cmd = ['alien_find', alien_workdir, file_name]
     finds = subprocess.check_output(cmd).strip().split()
     finds = [path.decode("utf-8") for path in finds]
     # alien_find puts some jibberish; stop at first line without path
     finds = [path for path in finds if path.startswith("/")]
 
     # do we have a result file in output/{run}/AnalysisResults.root?
-    pattern = r".*/output/\d+/AnalysisResults.root"
+    pattern = r".*/output/\d+/" + file_name
     if [f for f in finds if re.match(pattern, f)]:
         return [f for f in finds if re.match(pattern, f)]
 
     # Do we have merge stages?
-    pattern = r".*/output/\d+/Stage_(\d+)/\d+/AnalysisResults.root"
+    pattern = r".*/output/\d+/Stage_(\d+)/\d+/" + file_name
     stages = [int(re.match(pattern, f).group(1)) for f in finds if re.match(pattern, f)]
     if stages:
         max_stage = max(stages)
-        pattern = r".*/output/\d+/Stage_{}/\d+/AnalysisResults.root".format(max_stage)
+        pattern = r".*/output/\d+/Stage_{}/\d+/{}".format(max_stage, file_name)
         return [f for f in finds if re.match(pattern, f)]
     # find shortest path; last resort
     min_nfolders = min([len(path.split("/")) for path in finds])

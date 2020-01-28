@@ -40,7 +40,7 @@ def merge(args):
     if args.mergemode == 'download':
         workdir = os.path.dirname(os.path.abspath("./run.C")).split("/")[-1]
         alien_workdir = os.path.join(utils.find_user_grid_dir(), workdir)
-        files = utils.find_latest_merge_results(alien_workdir)
+        files = utils.find_latest_merge_results(alien_workdir, args.files)
         print("The following files will be downloaded:")
         pprint(files)
         for alien_path in files:
@@ -101,3 +101,4 @@ def create_subparsers(subparsers):
                                     "data after more jobs finished. Don't use this in combination "
                                     "with `clean` or you will be sorry."))
     parser_merge.set_defaults(op=merge)
+    parser_merge.add_argument('--files', help=("File name to download"), type=str, default="AnalysisResults.root")
