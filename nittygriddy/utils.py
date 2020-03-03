@@ -403,7 +403,7 @@ def find_latest_merge_results(alien_workdir, file_name="AnalysisResults.root"):
     return top_level_files
 
 
-def check_alien_token():
+def check_alien_token(Ver=1):
     """
     Check if a valid alien toke exists
 
@@ -412,14 +412,19 @@ def check_alien_token():
     AlienTokenError :
         If there was an error checking the token or if the existing token is invalid
     """
-    cmd = ["alien-token-info"]
-    try:
-        output = subprocess.check_output(cmd)
-    except subprocess.CalledProcessError:
-        raise AlienTokenError("Could not call `alien-token-info` to check token.")
-    for l in output.splitlines():
-        if "Token is still valid!" in str(l):
-            return True
+    if Ver == 0:  # Version 0 means before the change to JAlien
+        cmd = ["alien-token-info"]
+        try:
+            print("Checking alien-token-info")
+            output = subprocess.check_output(cmd)
+        except subprocess.CalledProcessError:
+            raise AlienTokenError("Could not call `alien-token-info` to check token.")
+        output = "Token is still valid!"
+        for l in output.splitlines():
+            if "Token is still valid!" in str(l):
+                return True
+    else:  # No need to check for valid token with JAlien
+        return True
     raise AlienTokenError(
         "Alien token is invalid. Call `alien-token-init` before running nittygriddy."
     )
