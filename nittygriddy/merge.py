@@ -59,6 +59,31 @@ def merge(args):
                 # If there was an error in the download, just print, but keep going
                 print(e)
 
+    if args.mergemode == "local":
+
+        def count_all_ext(path, fname):
+            flist = []
+            for root, dirs, files in os.walk(path):
+                # print("r", root)
+                # print("d", dirs)
+                # print("f", files)
+                for f in files:
+                    if fname != f:
+                        continue
+                    flist.append(root + "/" + f)
+                # pprint(flist)
+            return flist
+
+        for i in args.files.split():
+            files = count_all_ext("output", fname=i)
+            print("The following files will be locally merged into", i, ":")
+            pprint(files)
+            cmd = "hadd " + i
+            for j in files:
+                cmd += " " + j.strip()
+            print(cmd)
+            subprocess.check_call(cmd, shell=True)
+
     if args.mergemode == "clean":
         workdir = os.path.dirname(os.path.abspath("./run.C")).split("/")[-1]
         alien_workdir = os.path.join(utils.find_user_grid_dir(), workdir)
@@ -113,9 +138,10 @@ def create_subparsers(subparsers):
     parser_merge = subparsers.add_parser("merge", description=description_merge)
     parser_merge.add_argument(
         "mergemode",
-        choices=("online", "offline", "download", "clean", "unmerge"),
+        choices=("online", "offline", "download", "local", "clean", "unmerge"),
         help=(
-            "Merge files online, offline or download the latest merge results. "
+            "Merge files `online`, `offline` or `download` the latest merge results. "
+            "Use `local` to merge the local results you manually downloaded. "
             "Use `clean` to delete everything except the last merge stage. "
             "Use this if you only wnat to keep the final result to safe space. "
             "`unmerge` deletes all merge stages but kepes "
@@ -127,7 +153,7 @@ def create_subparsers(subparsers):
     parser_merge.set_defaults(op=merge)
     parser_merge.add_argument(
         "--files",
-        help=("File name to download"),
+        help=("File name to download or merge [AnalysisResults.root]"),
         type=str,
         default="AnalysisResults.root",
     )
