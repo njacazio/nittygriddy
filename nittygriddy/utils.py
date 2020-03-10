@@ -353,7 +353,7 @@ def check_aliphysics_version(version):
     return version
 
 
-def find_latest_merge_results(alien_workdir, file_name="AnalysisResults.root"):
+def find_latest_merge_results(alien_workdir, file_name="AnalysisResults.root", V=False):
     """
     Find the files resulting from the latest online merge. It relies on
     the resulting files being called `AnalysisResults.root`
@@ -378,6 +378,8 @@ def find_latest_merge_results(alien_workdir, file_name="AnalysisResults.root"):
         subprocess.check_output(["alien_ls", alien_workdir])
     except subprocess.CalledProcessError:
         raise ValueError("{} does not exist".format(alien_workdir))
+    if V:
+        print("Looking for file", file_name, "in path", alien_workdir)
 
     cmd = ["alien_find", alien_workdir, file_name]
     finds = subprocess.check_output(cmd).strip().split()
