@@ -200,7 +200,10 @@ def find_associated_archive_files(datadir, run_number_prefix, runs, data_pattern
             # line, we avoid some of this crap by fishing out the urls
             # manually from the TGridResult...
             gr = finds.GetGridResult()
-            urls.extend([str(el.GetValue("turl")).replace("alien://", "") for el in gr])
+            #urls.extend([str(el.GetValue("turl")).replace("alien://", "") for el in gr])
+            findcmd = "alien_find {} {}".format(search_string[:-1], archive_name)
+            gr = subprocess.getoutput(findcmd).split()
+            urls.extend([el.replace("alien://", "") for el in gr])
         # Did we find any files? If not, lets try it with the next archive name
         if len(urls) != 0:
             break
@@ -223,6 +226,7 @@ def download_from_grid_archive(alien_src, local_dest):
     int : File size in bytes
     """
     check_alien_token()
+    #print("Downloading", alien_src, "to", local_dest)
     try:
         os.makedirs(os.path.dirname(local_dest))
     except OSError:
