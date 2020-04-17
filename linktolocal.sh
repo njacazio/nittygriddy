@@ -2,6 +2,8 @@
 
 List=$(ls)
 
+mkdir oldpy
+
 for i in $List; do 
 	if [[ -L $i ]]; then
        		continue
