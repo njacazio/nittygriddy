@@ -22,6 +22,7 @@ for i in $List; do
 	ln -s nittygriddy-git/nittygriddy/$i .
 done
 
+ln -s nittygriddy-git/nittygriddy/grid.py .
 
 
 
