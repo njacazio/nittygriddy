@@ -1,12 +1,13 @@
 #! /usr/bin/python3
 import logging
 import sys
-import os
+import subprocess
 
-PPath=os.path.expanduser("~")
-PPath+="/.local/lib/"
-PPath+="python"+sys.version[:3]
-PPath+="/site-packages/nittygriddy"
+PYTHONVERSION = sys.version[:3]
+PPath = subprocess.check_output(['which', 'nitty']).decode().strip()
+PPath = PPath.replace("bin/nitty", "lib/")
+PPath += "python" + PYTHONVERSION
+PPath += "/site-packages/nittygriddy"
 sys.path.append(PPath)
 
 try:

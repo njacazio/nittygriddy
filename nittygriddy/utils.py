@@ -33,10 +33,11 @@ from nittygriddy.alienTokenError import AlienTokenError
 
 GRID_CONNECTION = None
 PYTHONVERSION = sys.version[:3]
-Rpath = os.path.expanduser("~")
-Rpath += "/.local/lib/"
-Rpath += "python" + PYTHONVERSION + "/site-packages/nittygriddy/non-python-files"
-ROOT.gROOT.LoadMacro(Rpath + "/TDataSetManagerAliEn.cxx+g")
+PPath = subprocess.check_output(['which', 'nitty']).decode().strip()
+PPath = PPath.replace("bin/nitty", "lib/")
+PPath += "python" + PYTHONVERSION
+PPath += "/site-packages/nittygriddy"
+ROOT.gROOT.LoadMacro(PPath + "/non-python-files/TDataSetManagerAliEn.cxx+g")
 
 
 def validate_dataset(ds):
