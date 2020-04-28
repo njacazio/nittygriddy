@@ -103,7 +103,7 @@ def merge(args):
             # its not possible to pass all arguments at once (too many)
             # Hence, pass 10 at a time
             for slice_start in range(len(folders))[::10]:
-                cmd = ["alien_rmdir"] + folders[slice_start : (slice_start + 10)]
+                cmd = ["alien_rm", "-r"] + folders[slice_start : (slice_start + 10)]
                 # alien_rmdir always seems to return a non-zero exit code... Yeah!
                 subprocess.call(cmd)
         # see if the deletion was successful:
@@ -127,7 +127,7 @@ def merge(args):
             ["alien_rm", os.path.join(alien_workdir, "output/*/root_archive.zip")]
         )
         subprocess.call(
-            ["alien_rmdir", os.path.join(alien_workdir, "output/*/Stage_*")]
+            ["alien_rm", "-r", os.path.join(alien_workdir, "output/*/Stage_*")]
         )
 
 
