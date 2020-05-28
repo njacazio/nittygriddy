@@ -76,12 +76,9 @@ def run(args):
         ds = utils.get_datasets()[args.dataset]
         # create list of local files
         with open(os.path.join(output_dir, "input_files.dat"), "a") as input_files:
-            search_string = os.path.join(
-                settings["local_data_dir"],
-                ds["datadir"].lstrip("/"),
-                "*",
-                ds["data_pattern"],
-            )
+            search_string = settings["local_data_dir"]
+            search_string += ds["datadir"].lstrip("/") + "*"
+            search_string += ds["data_pattern"]
             search_string = os.path.expanduser(search_string)
             search_results = glob(search_string)
             # Filter the found files to match the given run list
