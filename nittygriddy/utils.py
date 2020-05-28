@@ -184,26 +184,15 @@ def find_associated_archive_files(datadir, run_number_prefix, runs, data_pattern
     for archive_name in archive_names:
         for run in runs:
             # Create a search string for this run; make sure its a string not u""
-            search_string = str(
-                os.path.join(
-                    datadir, run_number_prefix + str(run), os.path.dirname(data_pattern)
-                )
-            )
-            # Most archives are called `root_archive.zip` but some are called aod_archive.root
-            # Maybe there are more species out there waiting to be found by a keen explorer!
-            finds = ROOT.TAliEnFind(search_string, archive_name)
-            # Ok, so. ROOT thinks linked lists are fucking
-            # awesome. Unfortunately, their access is is n^2, so we
-            # choke on a call to finds.GetCollection() if we have a
-            # few thousand urls, because deep inside the shit code of
-            # AliEn, we iterate through the shit that is a TList. I
-            # just want to get a few fucking files! Its 2017! Bottom
-            # line, we avoid some of this crap by fishing out the urls
-            # manually from the TGridResult...
-            gr = finds.GetGridResult()
-            #urls.extend([str(el.GetValue("turl")).replace("alien://", "") for el in gr])
+            search_string = os.path.dirname(datadir)
+            search_string += os.path.dirname("/" + run_number_prefix + str(run) + "/")
+            search_string += os.path.dirname(data_pattern)
+            search_string = str(search_string)
             findcmd = "alien_find {} {}".format(search_string[:-1], archive_name)
             gr = subprocess.getoutput(findcmd).split()
+            if "Not" in gr:
+              print("Latest find:", gr)
+              raise ValueError("Problem into finding archives")
             urls.extend([el.replace("alien://", "") for el in gr])
         # Did we find any files? If not, lets try it with the next archive name
         if len(urls) != 0:
