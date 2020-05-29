@@ -171,7 +171,7 @@ def download_file(alien_src, local_dest):
         return f.GetSize()
 
 
-def find_associated_archive_files(datadir, run_number_prefix, runs, data_pattern):
+def find_associated_archive_files(datadir, run_number_prefix, runs, data_pattern, verbose=False):
     check_alien_token()
     urls = []
     archive_names = ["root_archive.zip"]
@@ -198,6 +198,10 @@ def find_associated_archive_files(datadir, run_number_prefix, runs, data_pattern
         if len(urls) != 0:
             break
     logging.debug("Number of files found matching search string {}".format(len(urls)))
+    if verbose:
+      logging.debug("Example of the first 10 lines:")
+      for i in range(11):
+        logging.debug(urls[i])
     return urls
 
 
