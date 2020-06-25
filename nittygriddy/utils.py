@@ -497,9 +497,10 @@ def find_sources_of_merged_files(merge_results):
         # this assumes that the source files are in folders below
         # the given AnalysisResults.root file
         # Thus: /alienpath/AnalysisResults.root -> /alienpath/*/
-        search_str_sources = merge_result.replace("AnalysisResults.root", "*/")
-        cmd = ["alien_find", search_str_sources, "AnalysisResults.root"]
+        search_str_sources = merge_result.replace("AnalysisResults.root", "")
+        cmd = ["alien_find", search_str_sources, "/*/AnalysisResults.root"]
         finds = subprocess.check_output(cmd).strip().split()
+        finds = [to_unicode(i) for i in finds]
         # alien_find puts some jibberish; stop at first line without path
         finds = [path for path in finds if path.startswith("/")]
 

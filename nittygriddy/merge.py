@@ -87,9 +87,8 @@ def merge(args):
     if args.mergemode == "clean":
         workdir = os.path.dirname(os.path.abspath("./run.C")).split("/")[-1]
         alien_workdir = os.path.join(utils.find_user_grid_dir(), workdir)
-        files = utils.find_sources_of_merged_files(
-            utils.find_latest_merge_results(alien_workdir)
-        )
+        latest_files = utils.find_latest_merge_results(alien_workdir)
+        files = utils.find_sources_of_merged_files(latest_files)
         folders = [os.path.split(f)[0] for f in files]
         if not folders:
             print("No files to be cleaned up")
