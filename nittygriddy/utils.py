@@ -229,7 +229,10 @@ def download_from_grid_archive(alien_src, local_dest):
     # fix the dest to include the file name
     if not os.path.basename(local_dest):
         local_dest = os.path.join(local_dest, os.path.basename(alien_src))
-    with root_open("alien://" + alien_src) as f:
+    src_with_path = "alien://" + alien_src
+
+    #print("Downloading", src_with_path, "to", local_dest)
+    with root_open(src_with_path) as f:
         if not f.IsArchive():
             raise ValueError("{} does not point to an archive file.".format(alien_src))
         fsize = f.GetSize()
@@ -266,6 +269,8 @@ def download_dataset(dataset, volume, runs=None):
     runs : str
         Optional; Comma separeated list of runs which should be downloaded.
     """
+    print("Connecting to alien")
+    ROOT.TGrid.Connect("alien")
     ds = get_datasets()[dataset]
     # check if the root datadir exists
     local_data_dir = os.path.expanduser(settings["local_data_dir"])
@@ -286,11 +291,11 @@ def download_dataset(dataset, volume, runs=None):
     urls = find_associated_archive_files(
         ds["datadir"], ds["run_number_prefix"], runs, ds["data_pattern"]
     )
-    cum_size = 0
+    downloaded_size = 0
     for url in urls:
         local_path = os.path.join(local_data_dir, url.lstrip("/"))
         try:
-            cum_size += download_from_grid_archive(url, local_path)
+            downloaded_size += download_from_grid_archive(url, local_path)
         except OSError:
             if not warned_about_skipped:
                 warned_about_skipped = True
@@ -301,12 +306,12 @@ def download_dataset(dataset, volume, runs=None):
             pass
 
         sys.stdout.write(
-            "\rDownloaded {:2f}% of {}GB so far".format(
-                100 * cum_size / 1e9 / volume, volume
+            "\rDownloaded {:2f}% of {}GB so far\n".format(
+                100 * downloaded_size / 1e9 / volume, volume
             )
         )
         sys.stdout.flush()
-        if (cum_size / 1e9) > volume:
+        if (downloaded_size / 1e9) > volume:
             return
 
 
