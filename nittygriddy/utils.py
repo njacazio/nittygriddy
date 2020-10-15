@@ -37,7 +37,6 @@ PPath = subprocess.check_output(['which', 'nitty']).decode().strip()
 PPath = PPath.replace("bin/nitty", "lib/")
 PPath += "python" + PYTHONVERSION
 PPath += "/site-packages/nittygriddy"
-ROOT.gROOT.LoadMacro(PPath + "/non-python-files/TDataSetManagerAliEn.cxx+g")
 
 
 def validate_dataset(ds):
